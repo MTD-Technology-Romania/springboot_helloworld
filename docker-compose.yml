@@ -1,0 +1,43 @@
+version: '3.8'
+services:
+  user-management-service:
+    container_name: user-management-service
+    image: user-management-service:latest
+    restart: always
+    build:
+      context: .
+#      dockerfile: src/main/docker/Dockerfile
+      dockerfile: Dockerfile
+      args:
+        - JAR_FILE=${JAR_FILE_PATH}
+        - PORT=${DOCKER_HTTP_PORT}
+        - DEBUG_PORT=${DOCKER_DEBUG_PORT}
+    ports:
+      - 0.0.0.0:${DOCKER_HTTP_PORT}:${DOCKER_HTTP_PORT}
+      - 0.0.0.0:${DOCKER_DEBUG_PORT}:${DOCKER_DEBUG_PORT}
+    depends_on:
+      - postgresql-service
+    networks:
+      - app-containers-network
+
+
+  postgresql-service:
+    image: postgres:11.5
+    networks:
+      - app-containers-network
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - 0.0.0.0:${POSTGRES_PORT}:${POSTGRES_PORT}
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - PGDATA=/tmp
+
+networks:
+  app-containers-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
