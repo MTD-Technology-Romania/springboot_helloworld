@@ -1,17 +1,25 @@
-#FROM openjdk:11-jdk-slim
-FROM adoptopenjdk/openjdk11:ubi
+# syntax = docker/dockerfile:1.3
 
-#
-# define a new user to run the app, avoid in this way ROOT user.
-#
-# RUN addgroup -S hw && adduser -S hw -G spring
-# USER hw:spring
+ARG BUILD_IMAGE=maven:3.8.1-jdk-11-slim
+ARG RUNTIME_IMAGE=adoptopenjdk/openjdk11:alpine-slim
 
-ARG JAR_FILE
-ARG PORT
-ARG DEBUG_PORT
+FROM  ${BUILD_IMAGE} as MAVEN_BUILD_STAGE
 
-WORKDIR /opt/deployments
+
+WORKDIR /opt/deployments/build
+COPY ./src src
+COPY ./pom.xml pom.xml
+COPY ./checkstyle.xml checkstyle.xml
+COPY ./checkstyle-suppressions.xml checkstyle-suppressions.xml
+
+RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests
+
+FROM ${RUNTIME_IMAGE}
+WORKDIR /opt/deployments/application
+COPY --from=MAVEN_BUILD_STAGE /opt/deployments/build/target/*.jar app.jar
+
+ARG PORT=8080
+ARG DEBUG_PORT=5005
 
 ENV CONFIG_PROFILE container
 ENV CONFIG_LOCATION /opt/deployments/application-${CONFIG_PROFILE}.yml
@@ -20,7 +28,5 @@ ENV SPRING_OUTPUT_ANSI_ENABLED=ALWAYS \
 
 EXPOSE $PORT
 EXPOSE $DEBUG_PORT
-
-COPY $JAR_FILE app.jar
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -noverify -XX:+AlwaysPreTouch -Duser.timezone=UTC -Djava.security.egd=file:/dev/./urandom -Dspring.profiles.active=${CONFIG_PROFILE} -jar app.jar"]

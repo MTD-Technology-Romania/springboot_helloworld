@@ -1,0 +1,76 @@
+= User Management Application(spring boot poc)
+
+== container(DOCKER)
+
+in order to enter on Docker VM, local storage, on macos(big sur), move to path ``/Users/${user}/Library/Containers/com.docker.docker/Data``, if run here a ``ls -al`` command,
+the output look like bellow:
+
+[source, bash]
+----
+drwxr-xr-x  37 sorincristea  staff     1184 Jul 24 08:40 .
+drwxr-xr-x@  4 sorincristea  staff      128 Nov 14  2020 ..
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 backend-for-guest.sock
+srwxr-xr-x   1 sorincristea  staff        0 Apr  5 17:06 backend.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 debug-shell.sock
+-rw-r--r--   1 sorincristea  staff  5339824 Jun  1 19:09 default.profraw
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 diagnosticd.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 dns.tcp.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 dns.udp.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 docker-api.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 docker-cli.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 docker.raw.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 docker.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 filesystem-event.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 filesystem-export.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 filesystem-test.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 filesystem-volume.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 filesystem.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 gui-api.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 http-proxy-control.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 lifecycle-server.sock
+drwxr-xr-x   4 sorincristea  staff      128 Feb  7  2020 log
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 memlogdq.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 mutagen.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 ntp.udp.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 osxfs.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 socks.sock
+-rw-r--r--   1 sorincristea  staff        0 Oct 30  2018 task.lock
+drwxr-xr-x   8 sorincristea  staff      256 Jul 24 08:17 tasks
+drwxr-xr-x   3 sorincristea  staff       96 Oct 30  2018 vms
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 volume-contents.sock
+srwxr-xr-x   1 sorincristea  staff        0 Apr  5 17:06 vpnkit-bridge.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 vpnkit.data.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 vpnkit.diag.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 vpnkit.eth.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jul 24 08:17 vpnkit.pcap.sock
+srwxr-xr-x   1 sorincristea  staff        0 Jun  1 19:12 vpnkit.port.sock
+----
+
+in order to access LinuxVM(on mac os)  through , you can do this ``screen`` or ``nc`` commands(for TTY use screen, for socket use nc)
+
+* ``screen ~/Library/Containers/com.docker.docker/Data/vm/0/tty``
+* ``nc -U ~/Library/Containers/com.docker.docker/Data/debug-shell.sock``
+
+if previous commands doesn't work, use ``nsenter`` command:
+
+* ``docker run -it --privileged --pid=host debian nsenter -t 1 -m -u -n -i sh``(see: https://itnext.io/linux-container-from-scratch-339c3ba0411d or https://www.youtube.com/watch?v=sHp0Q3rvamk)
+
+
+build docker image from command line
+
+[source,dockerfile]
+----
+DOCKER_BUILDKIT=0 docker build -t user-management -f src/main/docker/Dockerfile . 
+----
+
+[source,dockerfile]
+----
+DOCKER_BUILDKIT=0  docker build -t user-m -f src/main/docker/Dockerfile --build-arg JAR_FILE=target/*.jar --build-arg PORT=8080 --build-arg DEBUG_PORT=5005  . 
+----
+
+build docker image and run it(create container) locally(based on docker compose)
+
+[source,dockerfile]
+----
+docker-compose down -v && docker-compose up --build --progress=plain
+----

@@ -6,12 +6,18 @@ services:
     restart: always
     build:
       context: .
-#      dockerfile: src/main/docker/Dockerfile
-      dockerfile: Dockerfile
+      dockerfile: src/main/docker/Dockerfile.slim
+#      dockerfile: src/main/docker/Dockerfile.fatJar
       args:
         - JAR_FILE=${JAR_FILE_PATH}
         - PORT=${DOCKER_HTTP_PORT}
         - DEBUG_PORT=${DOCKER_DEBUG_PORT}
+    environment:
+      - HOST=${DB_HOST}
+      - PORT=${DB_PORT}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     ports:
       - 0.0.0.0:${DOCKER_HTTP_PORT}:${DOCKER_HTTP_PORT}
       - 0.0.0.0:${DOCKER_DEBUG_PORT}:${DOCKER_DEBUG_PORT}
